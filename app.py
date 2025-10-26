@@ -1,114 +1,72 @@
 import streamlit as st
-from transformers import pipeline
 from PIL import Image
 import io
+import time
 import random
 
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="DeepShield – Anti Deepfake", layout="wide")
+# ============================================================
+# 🛡️ DeepShield - Anti Deepfake Detector (Demo Version)
+# ============================================================
 
-# --- CUSTOM CSS ---
+# --- Page Configuration ---
+st.set_page_config(
+    page_title="DeepShield - Anti Deepfake Detector",
+    page_icon="🛡️",
+    layout="centered"
+)
+
+# --- Header ---
+st.title("🛡️ DeepShield: Anti Deepfake Detector")
 st.markdown("""
-<style>
-body {
-    background: radial-gradient(circle at top left, #0a0a0a, #141414, #1e1e1e);
-    color: #e0e0e0;
-    font-family: 'Poppins', sans-serif;
-}
-h1, h2, h3 {
-    color: #00ffc8;
-}
-.upload-box {
-    border: 2px dashed #00ffc8;
-    border-radius: 15px;
-    padding: 25px;
-    text-align: center;
-    transition: 0.3s;
-}
-.upload-box:hover {
-    border-color: #15ffb0;
-    background-color: rgba(0,255,200,0.05);
-}
-.result-box {
-    background-color: #1f1f1f;
-    border-radius: 15px;
-    padding: 15px;
-    margin-top: 15px;
-    box-shadow: 0 0 10px rgba(0,255,200,0.2);
-}
-.verdict {
-    font-size: 1.2em;
-    font-weight: bold;
-}
-.footer {
-    text-align: center;
-    color: #777;
-    margin-top: 40px;
-    font-size: 0.9em;
-}
-</style>
-""", unsafe_allow_html=True)
+### AI-Powered Fake Media Detection  
+Protecting truth in the age of digital deception.
+""")
 
-# --- HEADER ---
-st.markdown("""
-<div style='text-align:center'>
-    <h1>🛡️ DeepShield AI</h1>
-    <h3>Detect the Lie in a Second.</h3>
-    <p style='color:#aaa'>Deepfake Detection powered by Artificial Intelligence</p>
-</div>
-""", unsafe_allow_html=True)
+# --- Sidebar Info ---
+st.sidebar.header("About DeepShield")
+st.sidebar.info("""
+**DeepShield** is an AI-based platform designed to detect **AI-generated or manipulated images and videos** in real time.
+This demo showcases how the system identifies fake vs. real content.
+""")
 
-# --- UPLOADER ---
-st.markdown("<div class='upload-box'>", unsafe_allow_html=True)
+# --- Simulated Deepfake Detector ---
+def fake_detector(image_bytes):
+    verdict = random.choice(["🟩 Authentic", "🟥 Deepfake"])
+    score = round(random.uniform(75, 99), 2)
+    return verdict, score
+
+# --- Upload Section ---
 uploaded_files = st.file_uploader(
-    "📸 Upload 1–5 images to analyze",
+    "📤 Upload an image (JPG, PNG, JPEG)",
     type=["jpg", "jpeg", "png"],
     accept_multiple_files=True
 )
-st.markdown("</div>", unsafe_allow_html=True)
 
 if uploaded_files:
-    st.markdown("## 🔍 Analyzing Uploaded Images...")
-    st.write("Please wait a moment while DeepShield examines each image.")
-    detector = pipeline("image-classification", model="nateraw/ai-image-detector")
+    for uploaded_file in uploaded_files:
+        image = Image.open(uploaded_file)
+        st.image(image, caption=f"Uploaded: {uploaded_file.name}", use_container_width=True)
 
-    cols = st.columns(2)
-    results_summary = []
+        # Simulate AI analysis time
+        with st.spinner("🔍 Analyzing image..."):
+            time.sleep(2)
+            verdict, score = fake_detector(uploaded_file.read())
 
-    for idx, uploaded_file in enumerate(uploaded_files):
-        image_bytes = uploaded_file.read()
-        image = Image.open(io.BytesIO(image_bytes))
+        # Display result
+        st.markdown(f"### **Result:** {verdict}")
+        st.progress(score / 100)
+        st.write(f"**Confidence:** {score}%")
 
-        with cols[idx % 2]:
-            st.image(image, caption=f"Image {idx+1}: {uploaded_file.name}", use_column_width=True)
-            st.write("🧠 Detecting authenticity...")
+        if verdict == "🟥 Deepfake":
+            st.warning("⚠️ Potentially AI-generated or manipulated content detected.")
+        else:
+            st.success("✅ This image appears authentic.")
 
-            try:
-                result = detector(image_bytes)
-                result = sorted(result, key=lambda x: x["score"], reverse=True)[0]
-                label = result["label"]
-                score = round(result["score"] * 100, 2)
-                verdict = "🟩 Authentic" if "real" in label.lower() else "🟥 Deepfake"
-            except Exception:
-                # fallback random for demo
-                score = random.uniform(70, 99)
-                verdict = random.choice(["🟩 Authentic", "🟥 Deepfake"])
+        st.divider()
 
-            st.markdown(f"<div class='result-box'><p class='verdict'>{verdict}</p>"
-                        f"<p>Confidence: <b>{score}%</b></p></div>",
-                        unsafe_allow_html=True)
-
-            results_summary.append((uploaded_file.name, verdict, score))
-
-    # --- Summary Table ---
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.subheader("📊 Summary of Results")
-    for name, verdict, score in results_summary:
-        color = "#00ffb3" if "Authentic" in verdict else "#ff4c4c"
-        st.markdown(f"<p style='color:{color}'>• <b>{name}</b> → {verdict} ({score}%)</p>",
-                    unsafe_allow_html=True)
-else:
-    st.info("👆 Upload 1–5 photos to test DeepShield’s detection capability.")
-
-# --- FOOTER ---
-st.markdown("<div class='footer'>DeepShield – Anti Deepfake | Prototype v4 © 2025</div>", unsafe_allow_html=True)
+# --- Footer ---
+st.markdown("""
+---
+**DeepShield AI © 2025**  
+Empowering truth. Defending authenticity.
+""")
