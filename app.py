@@ -70,7 +70,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 if uploaded_files:
     st.markdown("## 🔍 Analyzing Uploaded Images...")
     st.write("Please wait a moment while DeepShield examines each image.")
-    detector = pipeline("image-classification", model="p1atdev/ai-image-detector")
+    detector = pipeline("image-classification", model="nateraw/ai-image-detector")
 
     cols = st.columns(2)
     results_summary = []
